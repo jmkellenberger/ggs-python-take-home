@@ -47,7 +47,11 @@ class GitHubUser:
         return repos_list
     
     def oldest_repo(self) -> GitHubRepo:
-        return self.repos[-1]
+        no_repos = self.create_repo({'name': 'None',
+                                     'html_url':'None',
+                                     'language': 'None',
+                                     'license': None})
+        return self.repos[-1] if len(self.repos) > 0 else no_repos
 
     def languages_used(self) -> Dict[str, int]:
         languages_dict = {}
@@ -62,16 +66,25 @@ class GitHubUser:
         return languages_dict
 
     def most_used_language(self) -> str:
-        return max(self.languages, key = self.languages.get)
+        if len(self.languages) == 0:
+            return 'None'
+        else:
+            return max(self.languages, key = self.languages.get)
 
     def licences_used(self) -> Iterable[str]:
-        return ['GNU General Public License v2.0',
-                'MIT License',
-                'Creative Commons Zero v1.0 Universal']
+        licenses = []
+        
+        for repo in self.repos:
+            if repo.license in licenses:
+                continue
+            else:
+                licenses.append(repo.license)
+                
+        return licenses
 
 
 def main():
-    user = GitHubUser('s3cur3')
+    user = GitHubUser('jmkellenberger')
     print(f"Stats for {user.username}:")
     print(f"  - Oldest repo: {user.oldest_repo().name}")
     print(f"  - Favorite language: {user.most_used_language()}")
