@@ -8,6 +8,7 @@ class GitHubUser:
     def __init__(self, username: str):
         self.username = username
         self.repos = self.build_repos_list()
+        self.languages = self.languages_used()
     
     def create_repo(self, repo: hash) -> GitHubRepo:
         repo = GitHubRepo(  repo['name'],
@@ -49,10 +50,19 @@ class GitHubUser:
         return self.repos[-1]
 
     def languages_used(self) -> Dict[str, int]:
-        return {'Python': 4, 'PHP': 3, 'C++': 2, 'Elixir': 1}
+        languages_dict = {}
+        for repo in self.repos:
+            language = repo.language
+            
+            if language in languages_dict:
+                languages_dict[language] += 1
+            else:
+                languages_dict[language] = 1
+                
+        return languages_dict
 
     def most_used_language(self) -> str:
-        return 'Python'
+        return max(self.languages, key = self.languages.get)
 
     def licences_used(self) -> Iterable[str]:
         return ['GNU General Public License v2.0',
