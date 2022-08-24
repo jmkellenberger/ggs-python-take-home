@@ -5,9 +5,9 @@ from urllib.request import urlopen
 from urllib.parse import urlencode
 
 class GitHubUser:
-    def __init__(self, username: str):
+    def __init__(self, username: str, repos: list = []):
         self.username = username
-        self.repos = self.build_repos_list()
+        self.repos = self.parse_repos(repos) if repos else self.request_repos()
         self.languages = self.languages_used()
     
     def create_repo(self, repo: hash) -> GitHubRepo:
@@ -17,33 +17,39 @@ class GitHubUser:
                             repo['license'])
         return repo
     
-    def last_page(self, link_header) -> 'bool':
+    def last_page(self, link_header: str) -> 'bool':
         if link_header is None or "next" not in link_header:
             return True
         else: 
             return False
         
-    def next_page(self, link_header) -> str:
+    def next_page(self, link_header: str) -> str:
         return link_header.split(';')[0]
+    
+    def paginate(self, link_header: str) -> str:
+        if self.last_page(link_header):
+            return ''
+        else:
+            return self.next_page(link_header)
+        
+    def parse_repos(self, json_content: list) -> Iterable[GitHubRepo]:
+        repos = []
+        for repo in json_content:
+            repos.append(self.create_repo(repo))
+        return repos
 
-    def build_repos_list(self) -> Iterable[GitHubRepo]:
+    def request_repos(self) -> Iterable[GitHubRepo]:
         endpoint = f"https://api.github.com/users/{self.username}/repos"
         params = {'per_page': 100, 'sort': 'created'}
         url = f"{endpoint}?{urlencode(params)}"
         repos_list = []
         
-        while True:
+        while url:
             with urlopen(url) as response:
                 json_content = loads(response.read().decode())
-                for repo in json_content:
-                    repos_list.append(self.create_repo(repo))
-                    
-                link_header = response.getheader('link')
-                if self.last_page(link_header):
-                    break
-                else:
-                    url = self.next_page(link_header)
-                    
+                repos_list += self.parse_repos(json_content)
+                url = self.paginate(response.getheader('link'))
+
         return repos_list
     
     def oldest_repo(self) -> GitHubRepo:
@@ -66,10 +72,10 @@ class GitHubUser:
         return languages_dict
 
     def most_used_language(self) -> str:
-        if len(self.languages) == 0:
-            return 'None'
-        else:
+        if self.languages:
             return max(self.languages, key = self.languages.get)
+        else:
+            return 'None'
 
     def licences_used(self) -> Iterable[str]:
         licenses = []
@@ -84,7 +90,7 @@ class GitHubUser:
 
 
 def main():
-    user = GitHubUser('jmkellenberger')
+    user = GitHubUser('mhissain')
     print(f"Stats for {user.username}:")
     print(f"  - Oldest repo: {user.oldest_repo().name}")
     print(f"  - Favorite language: {user.most_used_language()}")
