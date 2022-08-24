@@ -1,6 +1,7 @@
 
 class GitHubRepo:
-    # TODO: Are there other fields it would be useful to track?
-    def __init__(self, name, url):
+    def __init__(self, name, url, language, license_used):
         self.name = name
         self.url = url
+        self.language = language
+        self.license = license_used
