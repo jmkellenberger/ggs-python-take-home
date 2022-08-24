@@ -46,7 +46,7 @@ class GitHubUser:
         return repos_list
     
     def oldest_repo(self) -> GitHubRepo:
-        return GitHubRepo('hello_world', 'https://github.com/jdoe/hello_world')
+        return self.repos[-1]
 
     def languages_used(self) -> Dict[str, int]:
         return {'Python': 4, 'PHP': 3, 'C++': 2, 'Elixir': 1}
@@ -63,7 +63,7 @@ class GitHubUser:
 def main():
     user = GitHubUser('s3cur3')
     print(f"Stats for {user.username}:")
-    # print(f"  - Oldest repo: {user.oldest_repo().name}")
+    print(f"  - Oldest repo: {user.oldest_repo().name}")
     print(f"  - Favorite language: {user.most_used_language()}")
     print(f" - Licenses used:")
     for license in user.licences_used():
